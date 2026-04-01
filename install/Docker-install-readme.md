@@ -264,6 +264,58 @@ sudo docker compose up -d
 | SSL Certificates | `/etc/letsencrypt/live/yourdomain.com/` |
 | Backups | `/opt/openalgo-backups/` |
 
+---
+
+## Server Installation Behind Existing Reverse Proxy (Docker or Podman)
+
+Use this when SSL termination and routing are already handled by your reverse proxy (for example: Traefik, Caddy, Nginx Proxy Manager, HAProxy).
+
+This script is non-interactive and env-driven: you pass runtime values as environment variables. Credentials are injected into generated runtime env files, not into the image build.
+
+### What This Mode Changes
+
+1. Does not install or configure Nginx
+2. Does not request or renew SSL certificates
+3. Does not modify UFW/firewall rules
+4. Detects and uses Docker or Podman runtime automatically
+5. Generates a proxy-friendly compose file with optional Traefik labels
+
+### Quick Start
+
+```bash
+wget https://raw.githubusercontent.com/marketcalls/openalgo/main/install/install-container-behind-proxy.sh
+chmod +x install-container-behind-proxy.sh
+BROKER_NAME=zerodha \
+BROKER_API_KEY='your_key' \
+BROKER_API_SECRET='your_secret' \
+DOMAIN='algo.example.com' \
+ENABLE_TRAEFIK_LABELS=true \
+./install-container-behind-proxy.sh
+```
+
+### Required Environment Variables
+
+1. `BROKER_NAME`
+2. `BROKER_API_KEY`
+3. `BROKER_API_SECRET`
+
+### Common Optional Variables
+
+1. `DOMAIN` (public hostname behind proxy)
+2. `TLS_TERMINATED=true|false` (default `true`)
+3. `CONTAINER_RUNTIME=docker|podman` (auto by default)
+4. `PROXY_NETWORK` (default `proxy`)
+5. `ENABLE_TRAEFIK_LABELS=true|false` (default `false`)
+6. `OPENALGO_IMAGE_TAG` (default `openalgo:proxy`)
+7. `BUILD_IMAGE=true|false` and `START_STACK=true|false`
+
+### Notes
+
+1. Install Docker or Podman yourself before running the script
+2. The script auto-creates the external proxy network if missing
+3. The script creates `.env.runtime` and `docker-compose.proxy.yaml` in your installation folder
+4. By default, container ports are exposed to the proxy network and not bound to host public ports
+
 ### Updating OpenAlgo
 
 Database migrations run **automatically** when the container starts.
